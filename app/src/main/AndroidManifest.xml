@@ -18,17 +18,17 @@
 
         <meta-data
             android:name="com.baidu.speech.APP_ID"
-            android:value="10674398"/>
+            android:value="14396299"/>
         <meta-data
             android:name="com.baidu.speech.API_KEY"
-            android:value="a8aZUvtoQjsrsVKy7UolPtUe"/>
+            android:value="7bQKhvR1MxmRItZ8ewx0dCtw"/>
         <meta-data
             android:name="com.baidu.speech.SECRET_KEY"
-            android:value="d14094ef8273855e1736f6ddc7b487c0"/>
+            android:value="muPi2KmIpgGtSBGLVFBb7ac2foNECX60"/>
 
         <service android:name="com.baidu.speech.VoiceRecognitionService" android:exported="false" />
 
-        <activity android:name=".MainActivity">
+        <activity android:name=".ActivityWakeUp">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

@@ -18,7 +18,7 @@ import com.baidu.speech.asr.SpeechConstant;
 
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity implements EventListener {
+public class ActivityRecog extends AppCompatActivity implements EventListener {
 
     protected TextView txtResult;
     protected TextView txtLog;
