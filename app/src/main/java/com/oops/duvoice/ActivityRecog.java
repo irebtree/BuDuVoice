@@ -10,15 +10,18 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.baidu.speech.EventListener;
 import com.baidu.speech.EventManager;
 import com.baidu.speech.EventManagerFactory;
 import com.baidu.speech.asr.SpeechConstant;
+import com.unity3d.player.UnityPlayer;
+import com.unity3d.player.UnityPlayerActivity;
 
 import java.util.ArrayList;
 
-public class ActivityRecog extends AppCompatActivity implements EventListener {
+public class ActivityRecog extends UnityPlayerActivity implements EventListener {
 
     protected TextView txtResult;
     protected TextView txtLog;
@@ -31,12 +34,13 @@ public class ActivityRecog extends AppCompatActivity implements EventListener {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        initPermission();
-        initView();
+        //setContentView(R.layout.activity_main);
+       // initPermission();
+        //initView();
 
         asr = EventManagerFactory.create(this, "asr");
         asr.registerListener(this); //  EventListener 中 onEvent方法
+        /*
         btn.setOnClickListener(new View.OnClickListener() {
 
             @Override
@@ -51,15 +55,16 @@ public class ActivityRecog extends AppCompatActivity implements EventListener {
                 stop();
             }
         });
+        */
     }
 
-    private void start() {
+    public void start() {
        String json = "{\"accept-audio-volume\":false,\"pid\":1536}";
         asr.send(SpeechConstant.ASR_START, json, null, 0, 0);
         printLog("输入d参数：" + json);
     }
 
-    private void stop() {
+    public void stop() {
         printLog("停止识别：ASR_STOP");
         asr.send(SpeechConstant.ASR_STOP, null, null, 0, 0); //
     }
@@ -99,7 +104,19 @@ public class ActivityRecog extends AppCompatActivity implements EventListener {
         }
         text += "\n";
         Log.i(getClass().getName(), text);
-        txtLog.append(text + "\n");
+      //  txtLog.append(text + "\n");
+
+        UnityPlayer.UnitySendMessage("BDVoice", "SetText", text);
+    }
+
+    // 显示Toast消息
+    public void ShowToast(final String message){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
+            }
+        });
     }
 
     /**
