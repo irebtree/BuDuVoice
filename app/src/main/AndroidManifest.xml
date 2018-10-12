@@ -15,8 +15,6 @@
 
         android:supportsRtl="true"
         android:theme="@android:style/Theme.NoTitleBar">
-        //android:theme="@style/AppTheme">
-
 
         <meta-data
             android:name="com.baidu.speech.APP_ID"
