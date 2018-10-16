@@ -19,7 +19,11 @@ import com.baidu.speech.asr.SpeechConstant;
 import com.unity3d.player.UnityPlayer;
 import com.unity3d.player.UnityPlayerActivity;
 
+import org.json.JSONObject;
+
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class ActivityRecog extends UnityPlayerActivity implements EventListener {
 
@@ -40,33 +44,39 @@ public class ActivityRecog extends UnityPlayerActivity implements EventListener 
 
         asr = EventManagerFactory.create(this, "asr");
         asr.registerListener(this); //  EventListener 中 onEvent方法
-        /*
-        btn.setOnClickListener(new View.OnClickListener() {
 
-            @Override
-            public void onClick(View v) {
-                start();
-            }
-        });
-        stopBtn.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                stop();
-            }
-        });
-        */
     }
 
-    public void start() {
+    public void startASR() {
        String json = "{\"accept-audio-volume\":false,\"pid\":1536}";
         asr.send(SpeechConstant.ASR_START, json, null, 0, 0);
         printLog("输入d参数：" + json);
     }
 
-    public void stop() {
+    public void stopASR() {
         printLog("停止识别：ASR_STOP");
         asr.send(SpeechConstant.ASR_STOP, null, null, 0, 0); //
+    }
+
+    public void startWakeUp() {
+
+        Map<String, Object> params = new TreeMap<String, Object>();
+
+        params.put(SpeechConstant.ACCEPT_AUDIO_VOLUME, false);
+        params.put(SpeechConstant.WP_WORDS_FILE, "assets:///WakeUp.bin");
+        // "assets:///WakeUp.bin" 表示WakeUp.bin文件定义在assets目录下
+
+        String json = null; // 这里可以替换成你需要测试的json
+        json = new JSONObject(params).toString();
+
+        //json = "{\"accept-audio-volume\":false,\"kws-file\":\"assets:\\/\\/\\/WakeUp.bin\"}";
+        asr.send(SpeechConstant.WAKEUP_START, json, null, 0, 0);
+        printLog("输入d参数：" + json);
+    }
+
+    public void stopWakeUp() {
+        printLog("停止唤醒：WAKEUP_STOP");
+        asr.send(SpeechConstant.WAKEUP_STOP, null, null, 0, 0); //
     }
 
     //   EventListener  回调方法
@@ -78,25 +88,24 @@ public class ActivityRecog extends UnityPlayerActivity implements EventListener 
         if (params != null && !params.isEmpty()) {
             logTxt += " ;params :" + params;
         }
+
+        if (name.equals(SpeechConstant.ASR_START)) {
+
+        }
+
         if (name.equals(SpeechConstant.CALLBACK_EVENT_ASR_PARTIAL)) {
-            if (params.contains("\"nlu_result\"")) {
-                if (length > 0 && data.length > 0) {
-                    logTxt += ", 语义解析结果：" + new String(data, offset, length);
-                }
-            }
-        } else if (data != null) {
+           //识别结果
+        }
+        if (name.equals(SpeechConstant.CALLBACK_EVENT_WAKEUP_SUCCESS)) {
+
+        }
+        else if (data != null) {
             logTxt += " ;data length=" + data.length;
         }
         printLog(logTxt);
     }
 
-    private void initView() {
-        txtResult = (TextView) findViewById(R.id.txtResult);
-        txtLog = (TextView) findViewById(R.id.txtLog);
-        btn = (Button) findViewById(R.id.btn);
-        stopBtn = (Button) findViewById(R.id.btn_stop);
-        //txtLog.setText(DESC_TEXT + "\n");
-    }
+
 
     private void printLog(String text) {
         if (logTime) {

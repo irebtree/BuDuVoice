@@ -10,11 +10,14 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.baidu.speech.EventListener;
 import com.baidu.speech.EventManager;
 import com.baidu.speech.EventManagerFactory;
 import com.baidu.speech.asr.SpeechConstant;
+import com.unity3d.player.UnityPlayer;
+import com.unity3d.player.UnityPlayerActivity;
 
 import org.json.JSONObject;
 
@@ -22,7 +25,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.TreeMap;
 
-public class ActivityWakeUp extends AppCompatActivity implements EventListener {
+public class ActivityWakeUp extends UnityPlayerActivity implements EventListener {
 
     protected TextView txtResult;
     protected TextView txtLog;
@@ -33,29 +36,16 @@ public class ActivityWakeUp extends AppCompatActivity implements EventListener {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        initPermission();
-        initView();
+       // setContentView(R.layout.activity_main);
+      //  initPermission();
+       // initView();
 
         wakeup = EventManagerFactory.create(this, "wp");
         wakeup.registerListener(this); //  EventListener 中 onEvent方法
-        btn.setOnClickListener(new View.OnClickListener() {
 
-            @Override
-            public void onClick(View v) {
-                start();
-            }
-        });
-        stopBtn.setOnClickListener(new View.OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                stop();
-            }
-        });
     }
 
-    private void start() {
+    public void startWakeUp() {
 
         Map<String, Object> params = new TreeMap<String, Object>();
 
@@ -71,8 +61,8 @@ public class ActivityWakeUp extends AppCompatActivity implements EventListener {
         printLog("输入d参数：" + json);
     }
 
-    private void stop() {
-        printLog("停止唤醒：ASR_STOP");
+    public void stopWakeUp() {
+        printLog("停止唤醒：WAKEUP_STOP");
         wakeup.send(SpeechConstant.WAKEUP_STOP, null, null, 0, 0); //
     }
 
@@ -85,16 +75,12 @@ public class ActivityWakeUp extends AppCompatActivity implements EventListener {
         } else if (data != null) {
             logTxt += " ;data length=" + data.length;
         }
-        printLog(logTxt);
+
+        UnityPlayer.UnitySendMessage("BDVoice", "SetText", logTxt);
+       // printLog(logTxt);
     }
 
-    private void initView() {
-        txtResult = (TextView) findViewById(R.id.txtResult);
-        txtLog = (TextView) findViewById(R.id.txtLog);
-        btn = (Button) findViewById(R.id.btn);
-        stopBtn = (Button) findViewById(R.id.btn_stop);
-        //txtLog.setText(DESC_TEXT + "\n");
-    }
+
 
     private void printLog(String text) {
         if (logTime) {
@@ -104,7 +90,15 @@ public class ActivityWakeUp extends AppCompatActivity implements EventListener {
         Log.i(getClass().getName(), text);
         txtLog.append(text + "\n");
     }
-
+    // 显示Toast消息
+    public void ShowToast2(final String message){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG).show();
+            }
+        });
+    }
     /**
      * android 6.0 以上需要动态申请权限
      */
