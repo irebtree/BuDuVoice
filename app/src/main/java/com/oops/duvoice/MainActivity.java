@@ -1,6 +1,10 @@
 package com.oops.duvoice;
 
+import android.app.KeyguardManager;
+import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.PowerManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -19,22 +23,25 @@ public class MainActivity extends UnityPlayerActivity implements DataCallback {
         baiDuVoice = BaiDuVoice.instance();
         baiDuVoice.init(MainActivity.this);
         baiDuVoice.dataCallback(this);
+/*
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+
+              //  screenOn();
+            }
+        }, 10000);
+        */
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        baiDuVoice.cancelASR();
-        baiDuVoice.stopWakeUp();
-        baiDuVoice.unregisterASRListener();
+        baiDuVoice.release();
 
     }
 
-    @Override
-    protected void onPause(){
-        super.onPause();
-        baiDuVoice.cancelASR();
-    }
 
     @Override
     public String callback(String s)//返回识别结果
@@ -52,6 +59,8 @@ public class MainActivity extends UnityPlayerActivity implements DataCallback {
         baiDuVoice.stopASR();
     }
 
+    public void cancelASR(){baiDuVoice.cancelASR();}
+
     public void startWakeUp(String json) {
         baiDuVoice.startWakeUp(json);
     }
@@ -59,6 +68,12 @@ public class MainActivity extends UnityPlayerActivity implements DataCallback {
     public void stopWakeUp() {
         baiDuVoice.stopWakeUp();
     }
+
+    public void release()
+    {
+        baiDuVoice.release();
+    }
+
     public void recResult(String json)//返回结果
     {
         callUnity(json);
@@ -94,6 +109,8 @@ public class MainActivity extends UnityPlayerActivity implements DataCallback {
             }
         });
     }
+
+
 
     /**
      * android 6.0 以上需要动态申请权限

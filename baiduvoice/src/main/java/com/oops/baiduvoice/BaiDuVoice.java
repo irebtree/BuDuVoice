@@ -1,7 +1,12 @@
 package com.oops.baiduvoice;
 
 import android.app.Activity;
+import android.app.KeyguardManager;
 import android.content.Context;
+import android.os.PowerManager;
+import android.util.Log;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.baidu.speech.EventListener;
@@ -20,7 +25,8 @@ public class BaiDuVoice {
     private EventManager asr;
     private EventListener asrLis;
     private EventManager wakeup;
-
+    private EventListener wakeupLis;
+    private static volatile boolean isInited = false;
     public static BaiDuVoice instance()
     {
 
@@ -34,19 +40,20 @@ public class BaiDuVoice {
     {
         unityContext = _context.getApplicationContext();
         unityActivity = (Activity)_context;
-
+        if(isInited)
+            throw new RuntimeException("");
+        isInited = true;
         asr = EventManagerFactory.create(unityContext, "asr");
         asrLis = setEvenListener();
         asr.registerListener(asrLis); //  EventListener 中 onEvent方法
 
         wakeup = EventManagerFactory.create(unityContext, "wp");
-        wakeup.registerListener(setEvenListener());
+        wakeupLis = setEvenListener();
+        wakeup.registerListener(wakeupLis);
+        acquireWakeLock();
     }
 
-    public void unregisterASRListener()
-    {
-        asr.unregisterListener(asrLis);
-    }
+
 
     public void startASR(String json) {
         //  String json = "{\"accept-audio-volume\":false,\"pid\":1536}";
@@ -74,7 +81,22 @@ public class BaiDuVoice {
         wakeup.send(SpeechConstant.WAKEUP_STOP, null, null, 0, 0); //
     }
 
-
+    public void release()
+    {
+        cancelASR();
+        if(asr != null)
+        {
+            asr.unregisterListener(asrLis);
+            asr = null;
+        }
+        stopWakeUp();
+        if(wakeup != null)
+        {
+            wakeup.unregisterListener(wakeupLis);
+            wakeup = null;
+        }
+        isInited = false;
+    }
 
     EventListener setEvenListener()
     {
@@ -110,6 +132,8 @@ public class BaiDuVoice {
 
                 else if (name.equals(SpeechConstant.CALLBACK_EVENT_WAKEUP_SUCCESS)) {
                     //唤醒成功
+                    screenOn();
+                   // acquireWakeLock();
                 }
                 else if (name.equals(SpeechConstant.CALLBACK_EVENT_WAKEUP_ERROR)) {
                     //唤醒失败
@@ -153,5 +177,41 @@ public class BaiDuVoice {
         return "From android >>>> " + str;
     }
 
+    public  void screenOn()//亮屏
+    {
+        KeyguardManager km = (KeyguardManager) unityActivity.getSystemService(Context.KEYGUARD_SERVICE);
+        PowerManager pm = (PowerManager) unityActivity.getSystemService(Context.POWER_SERVICE);
+        if(!pm.isScreenOn())
+        {
+            PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP |
+                    PowerManager.SCREEN_BRIGHT_WAKE_LOCK, "bright");
+            wl.acquire();
+            wl.release();
+            if( km.isKeyguardLocked())//判断 锁屏状态
+            {}
+        }
 
+    }
+
+    public void acquireWakeLock( ) //唤醒屏幕
+    {
+        final Window win = unityActivity.getWindow();
+            if (unityActivity != null && win != null)
+            {
+               // Log.i("","============");
+                win.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED
+                        | WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
+                        | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+                        | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
+            }
+
+
+    }
+
+    public void releaseWakeLock( )
+    {
+        if (unityActivity != null && unityActivity.getWindow() != null) {
+            unityActivity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        }
+    }
 }
