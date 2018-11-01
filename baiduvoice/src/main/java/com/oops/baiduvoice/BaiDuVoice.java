@@ -1,6 +1,7 @@
 package com.oops.baiduvoice;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.KeyguardManager;
 import android.content.Context;
 import android.os.PowerManager;
@@ -14,6 +15,9 @@ import com.baidu.speech.EventManager;
 import com.baidu.speech.EventManagerFactory;
 import com.baidu.speech.asr.SpeechConstant;
 import com.oops.*;
+
+import java.util.List;
+
 public class BaiDuVoice {
     private static BaiDuVoice _instance;
 
@@ -133,6 +137,7 @@ public class BaiDuVoice {
                 else if (name.equals(SpeechConstant.CALLBACK_EVENT_WAKEUP_SUCCESS)) {
                     //唤醒成功
                     screenOn();
+                    moveTaskToFront();
                    // acquireWakeLock();
                 }
                 else if (name.equals(SpeechConstant.CALLBACK_EVENT_WAKEUP_ERROR)) {
@@ -193,7 +198,7 @@ public class BaiDuVoice {
 
     }
 
-    public void acquireWakeLock( ) //唤醒屏幕
+    public void acquireWakeLock( ) //唤醒屏幕,只第一次有效
     {
         final Window win = unityActivity.getWindow();
             if (unityActivity != null && win != null)
@@ -213,5 +218,37 @@ public class BaiDuVoice {
         if (unityActivity != null && unityActivity.getWindow() != null) {
             unityActivity.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         }
+    }
+
+    public void moveTaskToFront()//唤醒后台到前台
+    {
+        if(isAppOnForeground() == false)
+        {
+            ActivityManager am = (ActivityManager) unityActivity.getSystemService(Context.ACTIVITY_SERVICE) ;
+            am.moveTaskToFront(unityActivity.getTaskId(), ActivityManager.MOVE_TASK_WITH_HOME);
+        }
+    }
+
+    public boolean isAppOnForeground() //判断程序是否前台
+    {
+        // Returns a list of application processes that are running on the
+        // device
+
+        ActivityManager activityManager = (ActivityManager) unityActivity.getApplicationContext().getSystemService(Context.ACTIVITY_SERVICE);
+        String packageName = unityActivity.getApplicationContext().getPackageName();
+
+        List<ActivityManager.RunningAppProcessInfo> appProcesses = activityManager
+                .getRunningAppProcesses();
+        if (appProcesses == null)
+            return false;
+
+        for (ActivityManager.RunningAppProcessInfo appProcess : appProcesses) {
+            // The name of the process that this object is associated with.
+            if (appProcess.processName.equals(packageName)
+                    && appProcess.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -1,13 +1,12 @@
 package com.oops.myapplication;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.KeyguardManager;
 import android.os.Handler;
 import android.os.PowerManager;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
-import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
@@ -17,6 +16,8 @@ import android.content.Intent;
 import com.oops.baiduvoice.BaiDuVoice;
 import com.oops.baiduvoice.DataCallback;
 import com.oops.duvoice.R;
+
+import java.util.List;
 
 public class MainActivity extends Activity implements DataCallback {
     protected Button btn1;
@@ -41,14 +42,9 @@ public class MainActivity extends Activity implements DataCallback {
             }
         });
         textView = (TextView)findViewById(R.id.textView);
-       // init();
+        init();
 
-        baiDuVoice = BaiDuVoice.instance();
-        baiDuVoice.init(MainActivity.this);
-        baiDuVoice.dataCallback(this);
-        startWakeUp("");
-
-        //  mPostDelayed(7000);
+        acquireWakeLock(MainActivity.this);
     }
 
     void btn1Click()
@@ -57,7 +53,12 @@ public class MainActivity extends Activity implements DataCallback {
     }
     private void init() {
 
+        baiDuVoice = BaiDuVoice.instance();
+        baiDuVoice.init(MainActivity.this);
+        baiDuVoice.dataCallback(this);
+        startWakeUp("");
 
+          mPostDelayed(7000);
 
     }
 
@@ -96,12 +97,60 @@ public class MainActivity extends Activity implements DataCallback {
             name =strs[0];
             if(name.equals("wp.data") )
             {
-                startASR("");
+                //baiDuVoice.screenOn();
+              //  baiDuVoice.moveTaskToFront();
+               // startASR("");
+                moveTaskToFront2();
             }
         }
 logTxt += s;
 textView.setText(logTxt);
         return s;
+    }
+
+    void moveTaskToFront2()//唤醒后台到前台
+    {
+       // Log.i("aaaa","22222");
+        if(isAppOnForeground() == false) {
+
+            Intent resultIntent = new Intent(Intent.ACTION_MAIN); // 启动栈顶的activity
+            resultIntent.addCategory(Intent.CATEGORY_LAUNCHER);
+            resultIntent.setClass(this, MainActivity.class);
+            resultIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+        }
+
+    }
+
+    void moveTaskToFront()//唤醒后台到前台
+    {
+        if(isAppOnForeground() == false)
+        {
+            ActivityManager am = (ActivityManager) this.getSystemService(Context.ACTIVITY_SERVICE) ;
+            am.moveTaskToFront(getTaskId(), ActivityManager.MOVE_TASK_WITH_HOME);
+        }
+    }
+
+    public boolean isAppOnForeground() //判断程序是否前台
+    {
+        // Returns a list of application processes that are running on the
+        // device
+
+        ActivityManager activityManager = (ActivityManager) getApplicationContext().getSystemService(Context.ACTIVITY_SERVICE);
+        String packageName = getApplicationContext().getPackageName();
+
+        List<ActivityManager.RunningAppProcessInfo> appProcesses = activityManager
+                .getRunningAppProcesses();
+        if (appProcesses == null)
+            return false;
+
+        for (ActivityManager.RunningAppProcessInfo appProcess : appProcesses) {
+            // The name of the process that this object is associated with.
+            if (appProcess.processName.equals(packageName)
+                    && appProcess.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void acquireWakeLock(Activity activity) {
@@ -115,7 +164,7 @@ textView.setText(logTxt);
                         | WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
                         | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
                         | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
-                releaseWakeLock(MainActivity.this);
+              //  releaseWakeLock(MainActivity.this);
             }
         }
 
@@ -161,8 +210,10 @@ void mPostDelayed(int delay)
             textView.setText("fff22ff");
            // screenOn();
             //screenOn1();
-            acquireWakeLock(MainActivity.this);
+           // acquireWakeLock(MainActivity.this);
             //releaseWakeLock(MainActivity.this);
+            moveTaskToFront2();
+          //  moveTaskToFront();
 
         }
     }, delay);//3秒后执行TimeTask的run方法
